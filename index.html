@@ -7,7 +7,7 @@
 		<title>reveal.js</title>
 
 		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+		<link rel="stylesheet" href="css/theme/black-future.css">
 
 		<!-- Theme used for syntax highlighting of code -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
@@ -24,8 +24,64 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+    				<h1><i>Back to the scala.concurrent.Future</i></h1>
+    				by 
+    				Kamil Korzekwa, 2016<br>
+    				<small><a href="https://kamkor.me/">kamkor.me</a> &bull; <a href="https://github.com/kamkor">github.com/kamkor</a> &bull; <a href="https://twitter.com/kamkorz">twitter.com/kamkorz</a></small>
+				</section>
+				<section>
+					<h2>Agenda</h2>
+					<ul>
+						<li>Synchronous vs asynchronous execution</li>
+						<li>Asynchrouns programming with Scala's Future</li>					
+						<li>FIXME</li>
+					</ul>
+				</section>
+				<section>
+					<section>
+						<h3>Synchronous.. Asynchronous.. ?</h3>
+					</section>
+					<section data-background="assets/lets_cook.jpg">
+					</section>
+					<section data-background="assets/cooking_southpark.gif">						
+						<h3 class="fragment" style="background-color: rgba(0,0,0,0.8)">Latency impact can be reduced with asynchronous processing</h3>
+					</section>
+				</section>
+				<section>
+					<section>										
+						<h2>Expressing latency with a type</h2>
+						<h4><span class="fragment">scala.concurrent.<span class="fragment highlight-red">Future[T]</span></span></h4>
+					</section>
+					<section>
+						<h2>Get synchronously</h2>
+						<pre><code class="scala" data-trim data-noescape>				
+trait HttpClient {						
+  def execute(request: Request): Response
+}
+
+// code will be blocked until response is returned
+val response: Response = client.execute(someRequest)
+						</code></pre>
+					</section>
+					<section>
+						<h2>Get asynchronously</h2>
+						<pre><code class="scala" data-trim data-noescape>
+trait HttpClient {						
+  def execute(request: Request): <mark>Future[Response]</mark>
+}
+
+// Future[Response] is returned immediately
+val f: <mark>Future[Response]</mark> = client.execute(someRequest)
+
+<div class="fragment">// register callback to get the response when its ready
+f onComplete { 
+  case Success(response) => doSomethingInteresting(response)
+  case Failure(throwable) => doSomething(throwable)
+}</div>
+						</code></pre>
+					</section>							
+
 			</div>
 		</div>
 
