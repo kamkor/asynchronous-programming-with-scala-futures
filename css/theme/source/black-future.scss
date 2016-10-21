@@ -64,3 +64,46 @@ mark {
     background-color: rgba(202, 201, 208, 0.34);
 }
 
+$tintFrom: blur(0px) saturate(1.0) brightness(1.0);
+$tint: blur(4px) saturate(0.5) brightness(0.3);
+
+@-webkit-keyframes blur-animation {
+  0% {
+    -webkit-filter: $tintFrom; 
+    -moz-filter: $tintFrom;
+    -o-filter: $tintFrom;
+    -ms-filter: $tintFrom;
+    filter: $tintFrom;
+
+  }
+  100% {
+    -webkit-filter: $tint;
+    -moz-filter: $tint;
+    -o-filter: $tint;
+    -ms-filter: $tint;
+    filter: $tint;
+  }
+}
+
+html.dim-animation .backgrounds {
+   -webkit-animation-name: blur-animation;
+   -webkit-animation-duration: 700ms;
+   -webkit-animation-iteration-count: 1;
+   -webkit-animation-direction: alternate;
+   -webkit-animation-timing-function: ease-out;
+   -webkit-animation-fill-mode: forwards;
+   -webkit-animation-delay: 0s;
+}
+
+.red {
+  color: #ff2c2d
+}
+
+.blue {
+  color: #1b91ff
+}
+
+.green {
+  color: #17ff2e
+}
+

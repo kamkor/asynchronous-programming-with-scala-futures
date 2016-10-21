@@ -24,7 +24,9 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>
+				<section data-background="assets/hack_your_career.jpg">
+				</section>
+				<section data-background="assets/hack_your_career.jpg" data-state="dim-animation" data-background-transition="none">
     				<h1><i>Back to the scala.concurrent.Future</i></h1>
     				by 
     				Kamil Korzekwa, 2016<br>
@@ -33,55 +35,66 @@
 				<section>
 					<h2>Agenda</h2>
 					<ul>
-						<li>Synchronous vs asynchronous execution</li>
-						<li>Asynchrouns programming with Scala's Future</li>					
-						<li>FIXME</li>
+						<li>Synchronous VS asynchronous processing</li>
+						<li>Asynchrouns programming with scala.concurrent.Future</li>
 					</ul>
 				</section>
 				<section>
 					<section>
 						<h3>Synchronous.. Asynchronous.. ?</h3>
-					</section>
-					<section data-background="assets/lets_cook.jpg">
-					</section>
+					</section>					
 					<section data-background="assets/cooking_southpark.gif">						
 						<h3 class="fragment" style="background-color: rgba(0,0,0,0.8)">Latency impact can be reduced with asynchronous processing</h3>
 					</section>
-				</section>
-				<section>
-					<section>										
-						<h2>Expressing latency with a type</h2>
-						<h4><span class="fragment">scala.concurrent.<span class="fragment highlight-red">Future[T]</span></span></h4>
+					<section data-transition="slide-in none">
+						<h3>Mashup service example</h3>
+						Return rich product information by retrieving data from multiple <strong class="red">http</strong> services (product, price)
+						<p class="blue">GET /productdetails/{productId}</p>
 					</section>
-					<section>
-						<h2>Get synchronously</h2>
-						<pre><code class="scala" data-trim data-noescape>				
-trait HttpClient {						
-  def execute(request: Request): Response
-}
-
-// code will be blocked until response is returned
-val response: Response = client.execute(someRequest)
-						</code></pre>
-					</section>
-					<section>
-						<h2>Get asynchronously</h2>
+					<section data-transition="none slide-out">
+						<h3>Synchronous implementation</h3>
+						<p class="blue">GET /productdetails/{productId}</p>
 						<pre><code class="scala" data-trim data-noescape>
-trait HttpClient {						
-  def execute(request: Request): <mark>Future[Response]</mark>
+val product: Product = productClient.getProduct(productId)
+val price: Price = priceClient.getPrice(productId)
+
+val productDetails = ProductDetails(product, price)
+val json = toJson(productDetails)
+
+// ...and then return the http response 
+						</code></pre>
+						<ul class="fragment">
+							<div class="red">
+								- Latency as a hidden effect<br>
+								- Not efficient (could call clients in parallel)<br>
+							</div>
+							<span class="green">+ Simple</span>
+						</ul>
+					</section>					
+					<section>
+						<h2>Hidden latency</h2>
+						<pre><code class="scala" data-trim data-noescape>
+trait ProductClient {						
+  def getProduct(productId: Long): <mark>Product</mark>
 }
 
-// Future[Response] is returned immediately
-val f: <mark>Future[Response]</mark> = client.execute(someRequest)
-
-<div class="fragment">// register callback to get the response when its ready
-f onComplete { 
-  case Success(response) => doSomethingInteresting(response)
-  case Failure(throwable) => doSomething(throwable)
-}</div>
+// blocked until product is retrieved from http service
+val product: <mark>Product</mark> = productClient.getProduct(productId)
 						</code></pre>
-					</section>							
+					</section>
+					<section>
+						<h2><span class="blue">Explicit latency</span></h2>
+						<pre><code class="scala" data-trim data-noescape>
+trait ProductClient {						
+  def getProduct(productId: Long): <mark>Future[Product]</mark>
+}
 
+// Future[Product] is returned immediately
+val productF: <mark>Future[Product]</mark> = productClient.getProduct(productId)
+						</code></pre>
+						<p class="fragment" ><strong class="blue">Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
+					</section>				
+				</section>
 			</div>
 		</div>
 

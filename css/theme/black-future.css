@@ -301,3 +301,35 @@ body {
 
 mark {
   background-color: rgba(202, 201, 208, 0.34); }
+
+@-webkit-keyframes blur-animation {
+  0% {
+    -webkit-filter: blur(0px) saturate(1) brightness(1);
+    -moz-filter: blur(0px) saturate(1) brightness(1);
+    -o-filter: blur(0px) saturate(1) brightness(1);
+    -ms-filter: blur(0px) saturate(1) brightness(1);
+    filter: blur(0px) saturate(1) brightness(1); }
+  100% {
+    -webkit-filter: blur(4px) saturate(0.5) brightness(0.3);
+    -moz-filter: blur(4px) saturate(0.5) brightness(0.3);
+    -o-filter: blur(4px) saturate(0.5) brightness(0.3);
+    -ms-filter: blur(4px) saturate(0.5) brightness(0.3);
+    filter: blur(4px) saturate(0.5) brightness(0.3); } }
+
+html.dim-animation .backgrounds {
+  -webkit-animation-name: blur-animation;
+  -webkit-animation-duration: 700ms;
+  -webkit-animation-iteration-count: 1;
+  -webkit-animation-direction: alternate;
+  -webkit-animation-timing-function: ease-out;
+  -webkit-animation-fill-mode: forwards;
+  -webkit-animation-delay: 0s; }
+
+.red {
+  color: #ff2c2d; }
+
+.blue {
+  color: #1b91ff; }
+
+.green {
+  color: #17ff2e; }
