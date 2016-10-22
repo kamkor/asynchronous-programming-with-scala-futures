@@ -72,7 +72,7 @@ val json = toJson(productDetails)
 						</ul>
 					</section>					
 					<section>
-						<h2>Hidden latency</h2>
+						<h2>Hidden latency effect</h2>
 						<pre><code class="scala" data-trim data-noescape>
 trait ProductClient {						
   def getProduct(productId: Long): <mark>Product</mark>
@@ -83,7 +83,7 @@ val product: <mark>Product</mark> = productClient.getProduct(productId)
 						</code></pre>
 					</section>
 					<section>
-						<h2><span class="blue">Explicit latency</span></h2>
+						<h2><span class="blue">Explicit latency effect</span></h2>
 						<pre><code class="scala" data-trim data-noescape>
 trait ProductClient {						
   def getProduct(productId: Long): <mark>Future[Product]</mark>
@@ -94,6 +94,94 @@ val productF: <mark>Future[Product]</mark> = productClient.getProduct(productId)
 						</code></pre>
 						<p class="fragment" ><strong class="blue">Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
 					</section>				
+				</section>
+				<section>
+					<section>
+						<h2>Introduction to <span class="blue">scala.concurrent.Future</span></h2>
+					</section>
+					<section>
+						<h2>How to create a Future</h2>
+						<pre><code class="scala" data-trim data-noescape>
+<div class="fragment" data-fragment-index="1">// Future code is run in the ExecutionContext
+implicit val ec = scala.concurrent.ExecutionContext.global</div>
+val f: Future[Matrix] = Future {
+  // multiple lines of code can be here
+  inverseMatrix(fatMatrix)	 
+}<span class="fragment" data-fragment-index="2">(ec) // executor can be passed explicitly too</span>
+</code></pre>
+<p class="fragment" data-fragment-index="3">Future { .. } is a shorthand for Future.apply { .. }</p>
+<pre class="fragment" data-fragment-index="3"><code class="scala" data-trim data-noescape>
+object Future {
+  def apply[T](code: ⇒ T)(implicit ec: ExecutionContext): Future[T]
+  // See more in Scala SDK   
+}
+</code></pre>								
+					</section>
+					<section>
+						<h2>Functional composition of Scala's Future</h2>
+					</section>
+					<section>
+						<h2>Turn water into beer</h2>
+						<pre><code class="scala" data-trim data-noescape>
+def brewBeer(water: Water): Beer = ???
+
+val waterF: Future[Water] = ???
+val beerF: Future[Beer] = <span class="fragment">waterF.map(brewBeer)</span>
+</code></pre>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
+def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
+</code></pre>	
+						<p class="fragment">T &nbsp;&nbsp;&nbsp;=> S<br>
+						Water => Beer</p>
+					</section>
+					<section>
+						<h2>Eventually turn water into beer</h2>
+						<pre><code class="scala" data-trim data-noescape>
+def brewBeer(water: Water): <mark>Future</mark>[Beer] = ???
+
+val waterF: Future[Water] = ???
+val beerF: Future[Beer] = <span class="fragment">waterF.flatMap(brewBeer)</span>
+</code></pre>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
+def flatMap[S](f: T => Future[S])
+              (implicit ec: ExecutionContext): Future[S]
+</code></pre>	
+						<p class="fragment">T &nbsp;&nbsp;&nbsp;=> Future[S]<br>
+						Water => Future[Beer]</p>
+					</section>
+					<section>
+						<h2>Filter beer with ABV > 5%</h2>
+						<pre><code class="scala" data-trim data-noescape>
+val beerF: Future[Beer] = ???
+val strongBeerF: Future[Beer] = <span class="fragment">beerF.filter(b => b.abv > 5.0)</span>
+</code></pre>
+						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException</p>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
+def filter(p: T => Boolean)(implicit executor: ExecutionContext)
+</code></pre>	
+						<p class="fragment">T => S<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beer => Boolean</p>
+					</section>
+					<section>
+						<h2>Fallback to backup beer</h2>
+						<pre><code class="scala" data-trim data-noescape>
+def backupBeer: Future[Beer] = ???
+
+val finalBeerF: Future[Beer] = <span class="fragment">strongBeerF.fallbackTo(backupBeer)</span>
+</code></pre>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
+def filter(p: T => Boolean)(implicit executor: ExecutionContext)
+</code></pre>	
+						<p class="fragment">T => S<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beer => Boolean</p>
+						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with exception NoSuchElementException</p>
+					</section>					
+					<section>
+						<h2>Putting it all together..</h2>
+					</section>
+					<section>
+					FIXME
+					</section>
 				</section>
 			</div>
 		</div>
