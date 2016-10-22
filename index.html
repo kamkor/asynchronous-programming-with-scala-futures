@@ -159,22 +159,35 @@ val strongBeerF: Future[Beer] = <span class="fragment">beerF.filter(b => b.abv >
 <pre class="fragment"><code class="scala" data-trim data-noescape>
 def filter(p: T => Boolean)(implicit executor: ExecutionContext)
 </code></pre>	
-						<p class="fragment">T => S<br>
-						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beer => Boolean</p>
 					</section>
 					<section>
-						<h2>Fallback to backup beer</h2>
+						<h2>Fallback to a backup beer</h2>
 						<pre><code class="scala" data-trim data-noescape>
 def backupBeer: Future[Beer] = ???
 
-val finalBeerF: Future[Beer] = <span class="fragment">strongBeerF.fallbackTo(backupBeer)</span>
+val beerF: Future[Beer] = ???
+val withFallback: Future[Beer] = <span class="fragment">beerF.fallbackTo(backupBeer)</span>
 </code></pre>
 <pre class="fragment"><code class="scala" data-trim data-noescape>
-def filter(p: T => Boolean)(implicit executor: ExecutionContext)
-</code></pre>	
-						<p class="fragment">T => S<br>
-						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Beer => Boolean</p>
-						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with exception NoSuchElementException</p>
+def fallbackTo[U >: T](that: Future[U]): Future[U]
+</code></pre>
+					<p class="fragment">There are more ways to deal with errors, like recover and recoverWith. See <a href="http://www.scala-lang.org/api/current/#scala.concurrent.Future">Scala API.</a></p>
+					</section>
+					<section>
+						<h2>Turn water into beer</h2>
+						<pre><code class="scala" data-trim data-noescape>
+def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
+
+val waterF: Future[Water] = ???
+val maltF: Future[Malt] = ???
+val ingredientsF: Future[(Water, Malt)] = <span class="fragment">waterF.zip(maltF)</span>
+
+val beerF: Future[Beer] = 
+  <span class="fragment">ingredientsF.flatMap(t => brewBeer(t._1, t._2))</span>
+</code></pre>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
+def zip[U](that: Future[U]): Future[(T, U)]
+</code></pre>
 					</section>					
 					<section>
 						<h2>Putting it all together..</h2>
