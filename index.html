@@ -134,6 +134,21 @@ f onComplete {
 					</section>								
 					<section>
 						<h2>Functional composition of Scala's Future</h2>
+<pre><code class="scala" data-trim data-noescape>
+trait Future[+T] extends Awaitable[T] {
+  <span class="fragment">def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]</span>
+
+  <span class="fragment">def flatMap[S](f: T => Future[S])
+              (implicit ec: ExecutionContext): Future[S]</span>
+
+  <span class="fragment">def filter(p: T => Boolean)(implicit executor: ExecutionContext)</span>
+
+  <span class="fragment">def fallbackTo[U >: T](that: Future[U]): Future[U] </span>
+
+  <span class="fragment">def zip[U](that: Future[U]): Future[(T, U)]</span>
+  <span class="fragment">// see more in Scala SDK</span>
+}
+</code></pre>							
 					</section>
 					<section>
 						<h2>Turn water into beer</h2>
@@ -141,9 +156,9 @@ f onComplete {
 def brewBeer(water: Water): Beer = ???
 
 val waterF: Future[Water] = ???
-val beerF: Future[Beer] = <span class="fragment">waterF.map(brewBeer)</span>
+val beerF: Future[Beer] = waterF.map(brewBeer)
 </code></pre>
-<pre class="fragment"><code class="scala" data-trim data-noescape>
+<pre><code class="scala" data-trim data-noescape>
 def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
 </code></pre>	
 					</section>
@@ -153,9 +168,9 @@ def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
 def brewBeer(water: Water): <mark>Future</mark>[Beer] = ???
 
 val waterF: Future[Water] = ???
-val beerF: Future[Beer] = <span class="fragment">waterF.flatMap(brewBeer)</span>
+val beerF: Future[Beer] = waterF.flatMap(brewBeer)
 </code></pre>
-<pre class="fragment"><code class="scala" data-trim data-noescape>
+<pre><code class="scala" data-trim data-noescape>
 def flatMap[S](f: T => Future[S])
               (implicit ec: ExecutionContext): Future[S]
 </code></pre>	
@@ -164,12 +179,12 @@ def flatMap[S](f: T => Future[S])
 						<h2>Filter beer with ABV > 5%</h2>
 						<pre><code class="scala" data-trim data-noescape>
 val beerF: Future[Beer] = ???
-val strongBeerF: Future[Beer] = <span class="fragment">beerF.filter(b => b.abv > 5.0)</span>
+val strongBeerF: Future[Beer] = beerF.filter(b => b.abv > 5.0)
 </code></pre>
-						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException</p>
-<pre class="fragment"><code class="scala" data-trim data-noescape>
+<pre><code class="scala" data-trim data-noescape>
 def filter(p: T => Boolean)(implicit executor: ExecutionContext)
-</code></pre>	
+</code></pre>
+						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException</p>	
 					</section>
 					<section>
 						<h2>Fallback to a backup beer</h2>
@@ -177,9 +192,9 @@ def filter(p: T => Boolean)(implicit executor: ExecutionContext)
 def backupBeer: Future[Beer] = ???
 
 val beerF: Future[Beer] = ???
-val withFallback: Future[Beer] = <span class="fragment" data-fragment-index="1">beerF.fallbackTo(backupBeer)</span>
+val withFallback: Future[Beer] = beerF.fallbackTo(backupBeer)
 </code></pre>
-<pre class="fragment" data-fragment-index="2"><code class="scala" data-trim data-noescape>
+<pre><code class="scala" data-trim data-noescape>
 def fallbackTo[U >: T](that: Future[U]): Future[U]
 </code></pre>
 					<p class="fragment" data-fragment-index="2">There are more ways to deal with errors, like recover and recoverWith. See <a href="http://www.scala-lang.org/api/current/#scala.concurrent.Future">Scala API.</a></p>
@@ -191,12 +206,12 @@ def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
 
 val waterF: Future[Water] = ???
 val maltF: Future[Malt] = ???
-val ingredientsF: Future[(Water, Malt)] = <span class="fragment">waterF.zip(maltF)</span>
+val ingredientsF: Future[(Water, Malt)] = waterF.zip(maltF)
 
 val beerF: Future[Beer] = 
   <span class="fragment">ingredientsF.flatMap(t => brewBeer(t._1, t._2))</span>
 </code></pre>
-<pre class="fragment"><code class="scala" data-trim data-noescape>
+<pre><code class="scala" data-trim data-noescape>
 def zip[U](that: Future[U]): Future[(T, U)]
 </code></pre>
 					</section>
@@ -277,7 +292,42 @@ val json: Future[JsValue] = productF
 				</section>
 				<section>
 					<section>
-						<h2>When not to use scala.concurrent.Future</h2>
+						<h2><span>When not to use scala.concurrent.Future</span></h2>
+						<p>Future is great for asynchronous computations.</p>
+						<p>For other concurrency problems, there are other abstractions available in Scala.</p>
+					</section>
+					<section>				
+						<h3>Concurrent state modifications</h3>
+						<p><strong>Example use case:</strong> concurrent bank account writes/reads.</p>
+						<p><strong>Can be solved with:</strong> Actor Model provided by <a href="http://akka.io">Akka toolkit</a></p>
+					</section>
+					<section>				
+						<h3>Streams</h3>
+						<ul>
+						<p><strong>Example use case:</strong> Returning chunked HTTP response where each chunk takes time to compute.</p>
+						<p><strong>Can be solved with:</strong> Observable from <a href="http://reactivex.io/rxscala/">RxScala</a></p>
+						</ul>
+						<table class="fragment">
+							<thead>
+								<tr>
+									<th></th>
+									<th>Single</th>
+									<th>Many</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>Synchronous (pull)</td>
+									<td>T</td>
+									<td>Iterable[T]</td>
+								</tr>
+								<tr>
+									<td>Asynchronous (push)</td>
+									<td>Future[T]</td>
+									<td class="green">Observable[T]</td>
+								</tr>
+							</tbody>
+						</table>
 					</section>
 				</section>
 				<section>
@@ -286,7 +336,7 @@ val json: Future[JsValue] = productF
 						<li>Functional programming makes it easy to write asynchronous code</li>
 						<li>Make latency explicit in your code</li>
 						<li>Asynchronous execution can reduce effect of latency</li>
-						<li>Asynchronous servers offer great performance</li>						
+						<li>Asynchronous servers offer great performance</li>
 					</ul>
 				</section>
 			</div>
