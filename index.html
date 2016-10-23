@@ -36,7 +36,8 @@
 					<h2>Agenda</h2>
 					<ul>
 						<li>Synchronous VS asynchronous processing</li>
-						<li>Asynchrouns programming with scala.concurrent.Future</li>
+						<li>Introduction to scala.concurrent.Future</li>
+						<li>Asynchronous processing in microservices</li>
 					</ul>
 				</section>
 				<section>
@@ -249,6 +250,9 @@ val beerF: Future[Beer] =
 					</section>
 				</section>
 				<section>
+					<section>
+						<h2>Asynchronous processing in microservices</h2>
+					</section>						
 					<section data-transition="slide-in none">
 						<h3>Back to the mashup service example</h3>
 						<p class="blue">GET /productdetails/{productId}</p>
@@ -307,7 +311,7 @@ val json: Future[JsValue] = productF
 						<p><strong>Example use case:</strong> Returning chunked HTTP response where each chunk takes time to compute.</p>
 						<p><strong>Can be solved with:</strong> Observable from <a href="http://reactivex.io/rxscala/">RxScala</a></p>
 						</ul>
-						<table class="fragment">
+						<table class="fragment" data-fragment-index="1">
 							<thead>
 								<tr>
 									<th></th>
@@ -323,8 +327,8 @@ val json: Future[JsValue] = productF
 								</tr>
 								<tr>
 									<td>Asynchronous (push)</td>
-									<td>Future[T]</td>
-									<td class="green">Observable[T]</td>
+									<td class="fragment" data-fragment-index="2">Future[T]</td>
+									<td class="fragment green" data-fragment-index="2">Observable[T]</td>
 								</tr>
 							</tbody>
 						</table>
