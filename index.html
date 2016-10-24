@@ -27,9 +27,9 @@
 				<section data-background="assets/hack_your_career.jpg">
 				</section>
 				<section data-background="assets/hack_your_career.jpg" data-state="dim-animation" data-background-transition="none">
-    				<h1><i>Back to the scala.concurrent.Future</i></h1>
+    				<h1><i>Back to the Future</i></h1>
     				by 
-    				Kamil Korzekwa, 2016<br>
+    				Kamil Korzekwa, October 2016<br>
     				<small><a href="https://kamkor.me/">kamkor.me</a> &bull; <a href="https://github.com/kamkor">github.com/kamkor</a> &bull; <a href="https://twitter.com/kamkorz">twitter.com/kamkorz</a></small>
 				</section>
 				<section>
@@ -42,7 +42,7 @@
 				</section>
 				<section>
 					<section>
-						<h3>Synchronous.. Asynchronous.. ?</h3>
+						<h2>Synchronous, Asynchronous.. ?</h2>
 					</section>					
 					<section data-background="assets/cooking_southpark.gif">						
 						<h3 class="fragment" style="background-color: rgba(0,0,0,0.8)">Latency impact can be reduced with asynchronous processing</h3>
@@ -57,7 +57,7 @@
 						<p class="blue">GET /productdetails/{productId}</p>
 						<pre><code class="scala" data-trim data-noescape>
 val product: Product = productClient.getProduct(productId)
-val price: Price = priceClient.getPrice(productId)
+val price: Price = priceClient.getPrice(productId, currency)
 
 val productDetails = ProductDetails(product, price)
 val json = toJson(productDetails)
@@ -66,32 +66,32 @@ val json = toJson(productDetails)
 						</code></pre>
 						<ul class="fragment">
 							<div class="red">
-								- Latency as a hidden effect<br>
 								- Not efficient (could call clients in parallel)<br>
+								- Latency as a hidden effect<br>
 							</div>
 							<span class="green">+ Simple</span>
 						</ul>
 					</section>					
 					<section>
-						<h2>Hidden latency effect</h2>
+						<h3>Hidden latency effect</h3>
 						<pre><code class="scala" data-trim data-noescape>
 trait ProductClient {						
-  def getProduct(productId: Long): <mark>Product</mark>
+  def getProduct(productId: Long): Product
 }
 
 // blocked until product is retrieved from http service
-val product: <mark>Product</mark> = productClient.getProduct(productId)
+val product: Product = productClient.getProduct(productId)
 						</code></pre>
 					</section>
 					<section>
-						<h2><span class="blue">Explicit latency effect</span></h2>
+						<h3><span class="blue">Explicit latency effect</span></h3>
 						<pre><code class="scala" data-trim data-noescape>
 trait ProductClient {						
-  def getProduct(productId: Long): <mark>Future[Product]</mark>
+  def getProduct(productId: Long): Future[Product]
 }
 
 // Future[Product] is returned immediately
-val productF: <mark>Future[Product]</mark> = productClient.getProduct(productId)
+val productF: Future[Product] = productClient.getProduct(productId)
 						</code></pre>
 						<p class="fragment" ><strong class="blue">Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
 					</section>				
@@ -101,7 +101,7 @@ val productF: <mark>Future[Product]</mark> = productClient.getProduct(productId)
 						<h2>Introduction to <span class="blue">scala.concurrent.Future</span></h2>
 					</section>
 					<section>
-						<h2>How to create a Future</h2>
+						<h3>How to create a Future</h3>
 						<pre><code class="scala" data-trim data-noescape>
 <div class="fragment" data-fragment-index="1">// Future code is run in the ExecutionContext
 implicit val ec = scala.concurrent.ExecutionContext.global</div>
@@ -110,8 +110,9 @@ val f: Future[Matrix] = Future {
   inverseMatrix(fatMatrix)	 
 }<span class="fragment" data-fragment-index="2">(ec) // executor can be passed explicitly too</span>
 </code></pre>
-<p class="fragment" data-fragment-index="3">Future { .. } is a shorthand for Future.apply { .. }</p>
-<pre class="fragment" data-fragment-index="3"><code class="scala" data-trim data-noescape>
+<p class="fragment" data-fragment-index="3">Future is not lazy. Computation is immediately scheduled for execution in the ExecutionContext.</p>
+<p class="fragment" data-fragment-index="4">Future { .. } is a shorthand for Future.apply { .. }</p>
+<pre class="fragment" data-fragment-index="4"><code class="scala" data-trim data-noescape>
 object Future {
   def apply[T](code: ⇒ T)(implicit ec: ExecutionContext): Future[T]
   // See more in Scala SDK   
@@ -119,10 +120,8 @@ object Future {
 </code></pre>								
 					</section>
 					<section>
-						<h2>Get value of Future with callback</h2>
+						<h3>Get Future value with a callback</h3>
 						<pre><code class="scala" data-trim data-noescape>
-implicit val ec = scala.concurrent.ExecutionContext.global
-
 val f: Future[Matrix] = Future {
   inverseMatrix(fatMatrix)	 
 }
@@ -132,9 +131,16 @@ f onComplete {
   case Failure(throwable) => doSomething(throwable)
 }
 </code></pre>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
+trait Future[+T] extends Awaitable[T] {
+  def onComplete[U](f: Try[T] => U)
+                   (implicit executor: ExecutionContext): Unit
+  // see more in Scala API
+}
+</code></pre>
 					</section>								
 					<section>
-						<h2>Functional composition of Scala's Future</h2>
+						<h3>Functional composition of Scala's Future</h3>
 <pre><code class="scala" data-trim data-noescape>
 trait Future[+T] extends Awaitable[T] {
   <span class="fragment">def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]</span>
@@ -147,12 +153,13 @@ trait Future[+T] extends Awaitable[T] {
   <span class="fragment">def fallbackTo[U >: T](that: Future[U]): Future[U] </span>
 
   <span class="fragment">def zip[U](that: Future[U]): Future[(T, U)]</span>
-  <span class="fragment">// see more in Scala SDK</span>
+
+  <span class="fragment">// see more in Scala API</span>
 }
 </code></pre>							
 					</section>
 					<section>
-						<h2>Turn water into beer</h2>
+						<h3>Turn water into beer</h3>
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water): Beer = ???
 
@@ -164,12 +171,11 @@ def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
 </code></pre>	
 					</section>
 					<section>
-						<h2>Eventually turn water into beer</h2>
+						<h3>Eventually turn water into beer</h3>
 						<pre><code class="scala" data-trim data-noescape>
-val waterF: Future[Water] = ???
-
 def brewBeer(water: Water): Future[Beer] = ???
 
+val waterF: Future[Water] = ???
 val beerF: Future[Beer] = <mark>waterF.flatMap(brewBeer)</mark>
 </code></pre>
 <pre><code class="scala" data-trim data-noescape>
@@ -178,7 +184,7 @@ def flatMap[S](f: T => Future[S])
 </code></pre>	
 					</section>
 					<section>
-						<h2>Filter beer with ABV > 5%</h2>
+						<h3>Filter beer with ABV > 5%</h3>
 						<pre><code class="scala" data-trim data-noescape>
 val beerF: Future[Beer] = ???
 val strongBeerF: Future[Beer] = <mark>beerF.filter(b => b.abv > 5.0)</mark>
@@ -189,9 +195,9 @@ def filter(p: T => Boolean)(implicit executor: ExecutionContext)
 						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException</p>	
 					</section>
 					<section>
-						<h2>Fallback to a backup beer</h2>
+						<h3>Fallback to a backup beer</h3>
 						<pre><code class="scala" data-trim data-noescape>
-def backupBeer: Future[Beer] = ???
+def backupBeer(): Future[Beer] = ???
 
 val beerF: Future[Beer] = ???
 val withFallback: Future[Beer] = <mark>beerF.fallbackTo(backupBeer)</mark>
@@ -202,7 +208,7 @@ def fallbackTo[U >: T](that: Future[U]): Future[U]
 					<p class="fragment" data-fragment-index="2">There are more ways to deal with errors, like recover and recoverWith. See <a href="http://www.scala-lang.org/api/current/#scala.concurrent.Future">Scala API.</a></p>
 					</section>
 					<section data-transition="slide-in none">
-						<h2>Turn water and malt into beer</h2>
+						<h3>Turn water and malt into beer</h3>
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
 
@@ -218,7 +224,7 @@ def zip[U](that: Future[U]): Future[(T, U)]
 </code></pre>
 					</section>
 					<section data-transition="none">
-						<h2>Turn water and malt into beer</h2>
+						<h3>Turn water and malt into beer</h3>
 						With pattern matching
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
@@ -233,7 +239,7 @@ val beerF: Future[Beer] = ingredientsF flatMap {
 </code></pre>
 					</section>					
 					<section data-transition="none">
-						<h2>Turn water and malt into beer</h2>
+						<h3>Turn water and malt into beer</h3>
 						With for comprehension
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
@@ -251,7 +257,7 @@ val beerF: Future[Beer] =
 					</section>
 					<section>
 						<h3>Visibility problems, synchronization?</h3>
-						<p><span class="red">Avoid synchronization in Futures.</span></p>
+						<p><span class="red"><strong>Avoid</strong> synchronization in Futures.</span></p>
 						<p>Transfer immutable objects between the Futures.</p>
 						<pre><code class="scala" data-trim data-noescape>
 // Immutable class in Scala
@@ -286,7 +292,7 @@ val json = toJson(productDetails)
 val productF: Future[Product] = productClient.getProduct(productId)
 val priceF: Future[Price] = priceClient.getPrice(productId)
 
-val json: Future[JsValue] = productF
+val jsonF: Future[JsValue] = productF
   .zip(priceF)
   .map({ case (product, price) => ProductDetails(product, price) })
   .map(productDetails => toJson(productDetails))
@@ -295,23 +301,32 @@ val json: Future[JsValue] = productF
 </code></pre>					
 					<ul class="fragment">
 						<div class="green">
-							+ Latency is explicit<br>
 							+ Product and price can be fetched in parallel<br>
+							+ Latency is explicit<br>
 							+ See next slide...<br>
 						</div>
 						<span class="red">- A bit more complex than synchronous code</span>
 					</ul>
 					</section>
 					<section>
-						<h2>Asynchronous servers</h2>
-						<p>Asynchronous code and non blocking io (http, database clients etc.) allow you to write servers that handle huge number of requests concurrently with only a few (or even one) threads.</p>
+						<h3>Asynchronous servers</h3>
+						<p>Asynchronous code and non blocking io (http client, database client etc.) allow you to write servers that handle huge number of concurrent requests with only a few (or even one) threads.</p>
+						<p class="fragment">Check libraries for writing services based on <a href="http://netty.io">Netty</a>. For example <a href="https://twitter.github.io/finatra/">Twitter's Finatra</a>.</p>
 					</section>
 				</section>
 				<section>
 					<section>
 						<h2><span>When <span class="red">not to</span> use scala.concurrent.Future</span></h2>
-						<p>Future is great for asynchronous computations.</p>
+						<p>Future is great for asynchronous computations that take time.</p>
 						<p>For other concurrency problems, there are other abstractions available in Scala.</p>
+					</section>
+					<section>
+						<h3>Your function is fast</h3>
+						<pre><code class="scala" data-trim data-noescape>
+// Makes no sense to calculate sum asynchronously
+def sum(a: Int, b: Int): Future[Int] = Future(a + b)
+</code></pre>									
+					Asynchronous processing overhead will just make such code slower.
 					</section>
 					<section>				
 						<h3>Concurrent state modifications</h3>
@@ -350,10 +365,10 @@ val json: Future[JsValue] = productF
 				<section>
 					<h2>Summary</h2>
 					<ul>
-						<li>Functional programming makes it easy to write asynchronous code</li>
-						<li>Make latency explicit in your code</li>
-						<li>Asynchronous execution can reduce effect of latency</li>
-						<li>Asynchronous servers offer great performance</li>
+						<p class="fragment">Functional programming makes concurrency easier</p>
+						<p class="fragment">Asynchronous processing reduces latency overhead</p>					
+						<p class="fragment">Asynchronous servers offer great performance (and use less resources)</p>
+						<p class="fragment">Consider making latency explicit in your code</p>
 					</ul>
 				</section>
 			</div>
