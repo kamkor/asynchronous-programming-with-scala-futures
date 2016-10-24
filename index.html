@@ -157,7 +157,7 @@ trait Future[+T] extends Awaitable[T] {
 def brewBeer(water: Water): Beer = ???
 
 val waterF: Future[Water] = ???
-val beerF: Future[Beer] = waterF.map(brewBeer)
+val beerF: Future[Beer] = <mark>waterF.map(brewBeer)</mark>
 </code></pre>
 <pre><code class="scala" data-trim data-noescape>
 def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
@@ -166,10 +166,11 @@ def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
 					<section>
 						<h2>Eventually turn water into beer</h2>
 						<pre><code class="scala" data-trim data-noescape>
-def brewBeer(water: Water): <mark>Future</mark>[Beer] = ???
-
 val waterF: Future[Water] = ???
-val beerF: Future[Beer] = waterF.flatMap(brewBeer)
+
+def brewBeer(water: Water): Future[Beer] = ???
+
+val beerF: Future[Beer] = <mark>waterF.flatMap(brewBeer)</mark>
 </code></pre>
 <pre><code class="scala" data-trim data-noescape>
 def flatMap[S](f: T => Future[S])
@@ -180,7 +181,7 @@ def flatMap[S](f: T => Future[S])
 						<h2>Filter beer with ABV > 5%</h2>
 						<pre><code class="scala" data-trim data-noescape>
 val beerF: Future[Beer] = ???
-val strongBeerF: Future[Beer] = beerF.filter(b => b.abv > 5.0)
+val strongBeerF: Future[Beer] = <mark>beerF.filter(b => b.abv > 5.0)</mark>
 </code></pre>
 <pre><code class="scala" data-trim data-noescape>
 def filter(p: T => Boolean)(implicit executor: ExecutionContext)
@@ -193,7 +194,7 @@ def filter(p: T => Boolean)(implicit executor: ExecutionContext)
 def backupBeer: Future[Beer] = ???
 
 val beerF: Future[Beer] = ???
-val withFallback: Future[Beer] = beerF.fallbackTo(backupBeer)
+val withFallback: Future[Beer] = <mark>beerF.fallbackTo(backupBeer)</mark>
 </code></pre>
 <pre><code class="scala" data-trim data-noescape>
 def fallbackTo[U >: T](that: Future[U]): Future[U]
@@ -207,10 +208,10 @@ def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
 
 val waterF: Future[Water] = ???
 val maltF: Future[Malt] = ???
-val ingredientsF: Future[(Water, Malt)] = waterF.zip(maltF)
+val ingredientsF: Future[(Water, Malt)] = <mark>waterF.zip(maltF)</mark>
 
 val beerF: Future[Beer] = 
-  <span class="fragment">ingredientsF.flatMap(t => brewBeer(t._1, t._2))</span>
+  <span class="fragment"><mark>ingredientsF.flatMap(t => brewBeer(t._1, t._2))</span></mark>
 </code></pre>
 <pre><code class="scala" data-trim data-noescape>
 def zip[U](that: Future[U]): Future[(T, U)]
@@ -248,11 +249,23 @@ val beerF: Future[Beer] =
   } yield beer
 </code></pre>
 					</section>
+					<section>
+						<h3>Visibility problems, synchronization?</h3>
+						<p><span class="red">Avoid synchronization in Futures.</span></p>
+						<p>Transfer immutable objects between the Futures.</p>
+						<pre><code class="scala" data-trim data-noescape>
+// Immutable class in Scala
+class ProductDetails(val product: Product, val price: Price)
+</code></pre>
+						<div class="fragment"><div style="width: 65%; float:left">To learn more about problems related to visibility issues between the threads (in insufficiently synchronized program, thread A may see different data than thread B), read the book with trains on the cover:</div>
+						<img class="plain" style="width: auto; height: auto; max-height: 400px;" src="assets/concurrency_in_practice.jpg"/>
+						</div>
+					</section>
 				</section>
 				<section>
 					<section>
 						<h2>Asynchronous processing in microservices</h2>
-					</section>						
+					</section>
 					<section data-transition="slide-in none">
 						<h3>Back to the mashup service example</h3>
 						<p class="blue">GET /productdetails/{productId}</p>
@@ -292,11 +305,11 @@ val json: Future[JsValue] = productF
 					<section>
 						<h2>Asynchronous servers</h2>
 						<p>Asynchronous code and non blocking io (http, database clients etc.) allow you to write servers that handle huge number of requests concurrently with only a few (or even one) threads.</p>
-					</section>					
+					</section>
 				</section>
 				<section>
 					<section>
-						<h2><span>When not to use scala.concurrent.Future</span></h2>
+						<h2><span>When <span class="red">not to</span> use scala.concurrent.Future</span></h2>
 						<p>Future is great for asynchronous computations.</p>
 						<p>For other concurrency problems, there are other abstractions available in Scala.</p>
 					</section>
@@ -325,10 +338,10 @@ val json: Future[JsValue] = productF
 									<td>T</td>
 									<td>Iterable[T]</td>
 								</tr>
-								<tr>
+								<tr class="fragment" data-fragment-index="2">
 									<td>Asynchronous (push)</td>
-									<td class="fragment" data-fragment-index="2">Future[T]</td>
-									<td class="fragment green" data-fragment-index="2">Observable[T]</td>
+									<td>Future[T]</td>
+									<td>Observable[T]</td>
 								</tr>
 							</tbody>
 						</table>

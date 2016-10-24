@@ -61,7 +61,10 @@ section.has-light-background {
 }
 
 mark {
-    background-color: rgba(202, 201, 208, 0.34);
+    //background-color: rgba(202, 201, 208, 0.34);
+    //background-color: rgba(200, 113, 185, 0.90);
+    //background-color: rgba(235, 243, 15, 1);
+    background-color: rgba(128, 158, 155, 0.9);
 }
 
 $tintFrom: blur(0px) saturate(1.0) brightness(1.0);
