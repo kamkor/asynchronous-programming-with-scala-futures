@@ -159,56 +159,56 @@ trait Future[+T] extends Awaitable[T] {
 </code></pre>							
 					</section>
 					<section>
-						<h3>Turn water into beer</h3>
+						<h3>MAP</h3>						
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water): Beer = ???
 
 val waterF: Future[Water] = ???
 val beerF: Future[Beer] = <mark>waterF.map(brewBeer)</mark>
 </code></pre>
-<pre><code class="scala" data-trim data-noescape>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
 def map[S](f: T => S)(implicit ec: ExecutionContext): Future[S]
 </code></pre>	
 					</section>
 					<section>
-						<h3>Eventually turn water into beer</h3>
+						<h3>FLATMAP</h3>
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water): Future[Beer] = ???
 
 val waterF: Future[Water] = ???
 val beerF: Future[Beer] = <mark>waterF.flatMap(brewBeer)</mark>
 </code></pre>
-<pre><code class="scala" data-trim data-noescape>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
 def flatMap[S](f: T => Future[S])
               (implicit ec: ExecutionContext): Future[S]
 </code></pre>	
 					</section>
 					<section>
-						<h3>Filter beer with ABV > 5%</h3>
+						<h3>FILTER</h3>
 						<pre><code class="scala" data-trim data-noescape>
 val beerF: Future[Beer] = ???
 val strongBeerF: Future[Beer] = <mark>beerF.filter(b => b.abv > 5.0)</mark>
 </code></pre>
-<pre><code class="scala" data-trim data-noescape>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
 def filter(p: T => Boolean)(implicit executor: ExecutionContext)
 </code></pre>
 						<p class="fragment">If Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException</p>	
 					</section>
 					<section>
-						<h3>Fallback to a backup beer</h3>
+						<h3>FallbackTO</h3>
 						<pre><code class="scala" data-trim data-noescape>
 def backupBeer(): Future[Beer] = ???
 
 val beerF: Future[Beer] = ???
 val withFallback: Future[Beer] = <mark>beerF.fallbackTo(backupBeer)</mark>
 </code></pre>
-<pre><code class="scala" data-trim data-noescape>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
 def fallbackTo[U >: T](that: Future[U]): Future[U]
 </code></pre>
-					<p class="fragment" data-fragment-index="2">There are more ways to deal with errors, like recover and recoverWith. See <a href="http://www.scala-lang.org/api/current/#scala.concurrent.Future">Scala API.</a></p>
+					<p class="fragment">There are more ways to deal with errors, like recover and recoverWith. See <a href="http://www.scala-lang.org/api/current/#scala.concurrent.Future">Scala API.</a></p>
 					</section>
 					<section data-transition="slide-in none">
-						<h3>Turn water and malt into beer</h3>
+						<h3>ZIP</h3>
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
 
@@ -219,13 +219,12 @@ val ingredientsF: Future[(Water, Malt)] = <mark>waterF.zip(maltF)</mark>
 val beerF: Future[Beer] = 
   <span class="fragment"><mark>ingredientsF.flatMap(t => brewBeer(t._1, t._2))</span></mark>
 </code></pre>
-<pre><code class="scala" data-trim data-noescape>
+<pre class="fragment"><code class="scala" data-trim data-noescape>
 def zip[U](that: Future[U]): Future[(T, U)]
 </code></pre>
 					</section>
 					<section data-transition="none">
-						<h3>Turn water and malt into beer</h3>
-						With pattern matching
+						<h3>Pattern match tuple</h3>						
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
 
@@ -239,8 +238,7 @@ val beerF: Future[Beer] = ingredientsF flatMap {
 </code></pre>
 					</section>					
 					<section data-transition="none">
-						<h3>Turn water and malt into beer</h3>
-						With for comprehension
+						<h3>For comprehension</h3>
 						<pre><code class="scala" data-trim data-noescape>
 def brewBeer(water: Water, malt: Malt): Future[Beer] = ???
 
@@ -257,15 +255,28 @@ val beerF: Future[Beer] =
 					</section>
 					<section>
 						<h3>Visibility problems, synchronization?</h3>
-						<p><span class="red"><strong>Avoid</strong> synchronization in Futures.</span></p>
-						<p>Transfer immutable objects between the Futures.</p>
+						<p>In insufficiently synchronized program, thread A may see different data than thread B.</p>
+					</section>
+					<section>						
+						<h3><span class="red"><strong>Avoid</strong> synchronization in Futures</span></h3>
+						<p>Transfer immutable objects between the Futures</p>
 						<pre><code class="scala" data-trim data-noescape>
 // Immutable class in Scala
 class ProductDetails(val product: Product, val price: Price)
+
+<div class="fragment">val product = ???
+val price = ???
+val productDetails = new ProductDetails(product, price)</div>
+<div class="fragment">val newPrice = ???
+val withNewPrice = productDetails.copy(price = newPrice)</div>
 </code></pre>
-						<div class="fragment"><div style="width: 65%; float:left">To learn more about problems related to visibility issues between the threads (in insufficiently synchronized program, thread A may see different data than thread B), read the book with trains on the cover:</div>
-						<img class="plain" style="width: auto; height: auto; max-height: 400px;" src="assets/concurrency_in_practice.jpg"/>
+					</section>
+					<section>
+					    <h3>Visibility & Synchronization in JVM</h3>
+						<div><div style="width: 60%; float:left">To learn more about problems related to visibility issues between the threads in JVM, read the book with trains on the cover:</div>
+						<img class="plain" style="width: auto; height: auto; max-height: 450px;" src="assets/concurrency_in_practice.jpg"/>
 						</div>
+
 					</section>
 				</section>
 				<section>
@@ -301,7 +312,7 @@ val jsonF: Future[JsValue] = productF
 </code></pre>					
 					<ul class="fragment">
 						<div class="green">
-							+ Product and price can be fetched in parallel<br>
+							+ Product and Price can be fetched in parallel<br>
 							+ Latency is explicit<br>
 							+ See next slide...<br>
 						</div>
@@ -309,8 +320,13 @@ val jsonF: Future[JsValue] = productF
 					</ul>
 					</section>
 					<section>
+						<h3>Causes of latency in microservices</h3>
+						<p>Mostly IO intensive tasks (e.g. http calls, database calls)</p>
+						<p>Less often CPU intensive tasks (e.g. performing encryption)</p>
+					</section>
+					<section>
 						<h3>Asynchronous servers</h3>
-						<p>Asynchronous code and non blocking io (http client, database client etc.) allow you to write servers that handle huge number of concurrent requests with only a few (or even one) threads.</p>
+						<p>Asynchronous code and non blocking io (http client, database client etc.) allow you to write servers that handle huge number of concurrent requests with only a few (or even one) threads.</p>						
 						<p class="fragment">Check libraries for writing services based on <a href="http://netty.io">Netty</a>. For example <a href="https://twitter.github.io/finatra/">Twitter's Finatra</a>.</p>
 					</section>
 				</section>
@@ -370,6 +386,9 @@ def sum(a: Int, b: Int): Future[Int] = Future(a + b)
 						<p class="fragment">Asynchronous servers offer great performance (and use less resources)</p>
 						<p class="fragment">Consider making latency explicit in your code</p>
 					</ul>
+				</section>
+				<section>
+					<h1>Thank you, questions?</h1>
 				</section>
 			</div>
 		</div>

@@ -300,7 +300,7 @@ body {
   -webkit-text-stroke-color: silver; }
 
 mark {
-  background-color: #ef585d; }
+  background-color: rgba(247, 232, 229, 0.98); }
 
 @-webkit-keyframes blur-animation {
   0% {
