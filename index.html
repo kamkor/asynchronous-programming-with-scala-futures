@@ -36,7 +36,7 @@
 					<h2>Agenda</h2>
 					<ul>
 						<li>Synchronous VS asynchronous processing</li>
-						<li>Introduction to scala.concurrent.Future</li>
+						<li>Introduction to asynchronous processing in Scala</li>
 						<li>Asynchronous processing in microservices</li>
 					</ul>
 				</section>
@@ -47,7 +47,7 @@
 					</section>
 					<section data-transition="slide-in none">
 						<h3>Consuming HTTP Services</h3>
-						Return rich product information as json by retrieving data from multiple <strong class="red">http services</strong> (product, price)						
+						Return rich product information as json by retrieving data from multiple <strong class="blue">http services</strong> (product, price).
 					</section>
 					<section data-transition="none slide-out">
 						<h3>Consuming HTTP Services</h3>
@@ -115,13 +115,13 @@ val product: Product = productClient.getProduct(productId)
 								</tr>
 								<tr>
 									<td>Network round trip between Europe and USA</td>
-									<td><span class="fragment highlight-red">3 years</span></td>
+									<td><span class="fragment highlight-blue">3 years</span></td>
 								</tr>
 							</tbody>
 						</table>
 					</section>						
 					<section>
-						<h3><span class="blue">Explicit</span> latency effect</h3>
+						<h3>Explicit latency effect</h3>
 						<pre><code class="scala" data-trim data-noescape>
 trait ProductClient {						
   def getProduct(productId: Long): Future[Product]
@@ -130,7 +130,7 @@ trait ProductClient {
 // Future[Product] is returned immediately
 val productF: Future[Product] = productClient.getProduct(productId)
 						</code></pre>
-						<p class="fragment" ><strong class="blue">Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
+						<p class="fragment"><strong class="blue">Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
 					</section>				
 				</section>
 				<section>
@@ -212,7 +212,7 @@ val softFriedEggF: Future[FriedEgg] =
     .flatMap(frySlowly) // returns Future[FriedEgg] 
     .filter(_.isSoft)  
 </code></pre>
-						<p class="fragment">If Scala's Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException</p>	
+						<p class="fragment">If Scala's Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException.</p>	
 					</section>								
 					<section>					
 					<h2>Future[<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 45px;" src="assets/friedegg.png"/>], Future[<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 45px;" src="assets/tea.png"/>]
@@ -289,7 +289,7 @@ val jsonF: Future[Json] =
 							+ Main flow of the code is never blocked<br>
 							+ Product and Price can be fetched in parallel<br>
 							+ Latency is explicit<br>
-							+ See next slide...<br>
+							+ See next two slides...<br>
 						</div>
 						<span class="red">- A bit more complex than synchronous code</span>
 					</ul>
@@ -302,13 +302,13 @@ val jsonF: Future[Json] =
 					<section>
 						<h3>Asynchronous microservices</h3>
 						<p>Asynchronous processing and non blocking io (http client, database client etc.) allow you to write microservices that handle huge number of concurrent requests with only a few (or even one) threads.</p>						
-						<p class="fragment">Check libraries for writing services based on <a href="http://netty.io">Netty</a>. For example <a href="https://twitter.github.io/finatra/">Twitter's Finatra</a>.</p>
+						<p class="fragment">There are many libraries for writing such services. They are often based on <a href="http://netty.io">Netty</a>. For example <a href="https://twitter.github.io/finatra/">Twitter's Finatra</a>.</p>
 					</section>
 				</section>
 				<section>
 					<section>
 						<h2><span>When <span class="red">not to</span> use scala.concurrent.Future</span></h2>
-						<p>Future is great for asynchronous computations that take time.</p>
+						<p>Future is great for performing asynchronous computations that take time.</p>
 						<p>For other concurrency problems, there are other abstractions available in Scala.</p>
 					</section>
 					<section>
@@ -317,7 +317,10 @@ val jsonF: Future[Json] =
 // Makes no sense to calculate sum asynchronously
 def sum(a: Int, b: Int): Future[Int] = Future(a + b)
 </code></pre>									
-					Asynchronous processing overhead will just make such code slower.
+					<ul>
+					Asynchronous processing overhead will just make such code slower.<br><br>
+					Future also suggests to the user that this function has noticable latency, which is a lie. 
+					</ul>
 					</section>
 					<section>				
 						<h3>Concurrent state modifications</h3>
