@@ -47,7 +47,7 @@
 					</section>
 					<section data-transition="slide-in none">
 						<h3>Consuming HTTP Services</h3>
-						Return rich product information as json by retrieving data from multiple <strong class="blue">http services</strong> (product, price).
+						Return rich product information as json by retrieving data from multiple <strong>http services</strong> (product, price).
 					</section>
 					<section data-transition="none slide-out">
 						<h3>Consuming HTTP Services</h3>
@@ -62,7 +62,7 @@ val json = toJson(productDetails)
 						<ul class="fragment">
 							<div class="red">
 								- Not efficient (could call clients in parallel)<br>
-								- Client calls are blocking<br>
+								- Wasting resources (thread is blocked twice)<br>
 								- Latency as a hidden effect<br>								
 							</div>
 							<span class="green">+ Simple</span>
@@ -120,32 +120,26 @@ trait ProductClient {
 // Future[Product] is returned immediately
 val productF: Future[Product] = productClient.getProduct(productId)
 						</code></pre>
-						<p><strong class="blue">Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
+						<p><strong>Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
 					</section>				
 				</section>
 				<section>
 					<section>
-						<h2>Introduction to <span class="blue">scala.concurrent.Future</span></h2>
+						<h2>Introduction to <span class="green">scala.concurrent.Future</span></h2>
 						<p>Other languages contain similar type. CompletableFuture in Java, Promise in JavaScript etc.</p>						
 					</section>
 					<section>
 						<h3>How to create a Future</h3>
 						<pre><code class="scala" data-trim data-noescape>
-val friedEggF: Future[FriedEgg] = Future {
-  // code inside the Future runs in the background
-  val eggContent = breakDown(egg)
-  fry(eggContent)
-}
+val friedEggF: Future[FriedEgg] = Future { fry(egg) }
 </code></pre>
-<p>Scala's Future is not lazy. Computation is immediately scheduled for execution.</p>
+<p>Code inside the Future block is immediately scheduled for execution on another thread<span class="red">*</span><br><br>
+<span class="red">* Unless you really want it to run on the current thread <img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/fire.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/fire.png"/>&nbsp;</span>
 					</section>
 					<section>
 						<h3>Get Future value with a callback</h3>
 						<pre><code class="scala" data-trim data-noescape>
-val friedEggF: Future[FriedEgg] = Future {
-  val eggContent = breakDown(egg)
-  fry(eggContent)
-}
+val friedEggF: Future[FriedEgg] = Future { fry(egg) }
 
 friedEggF onComplete {
   case Success(friedEgg)         => println("yummy: " + friedEgg)
@@ -170,11 +164,14 @@ friedEggF onComplete {
 					=>
 					<img class="plain" style="padding: 0 0; margin: 0 0; width: auto; height: auto; max-height: 50px;" src="assets/friedegg.png"/></h3>
 						<pre><code class="scala" data-trim data-noescape>
-def fry(egg: Egg): FriedEgg = ???
-
+// 1
 val eggF: Future[Egg] = chicken.layEgg()
 
-val friedEggF: Future[FriedEgg] = <mark>eggF.<span class="fragment" data-fragment-index="1">map(fry)</span></mark>
+// 2
+def fry(egg: Egg): FriedEgg = ???
+
+// 3
+val friedEggF: Future[FriedEgg] = eggF.<span class="fragment" data-fragment-index="1">map(fry)</span>
 </code></pre>
 					</section>
 					<section>
@@ -182,14 +179,17 @@ val friedEggF: Future[FriedEgg] = <mark>eggF.<span class="fragment" data-fragmen
 					=>
 					Future[<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 45px;" src="assets/friedegg.png"/>]</h3>
 						<pre><code class="scala" data-trim data-noescape>
-def frySlowly(egg: Egg): Future[FriedEgg] = ???
-
+// 1
 val eggF: Future[Egg] = chicken.layEgg()
 
-// This is not what we want!
-val friedEggFF: Future[Future[FriedEgg]] = eggF.map(frySlowly)
+// 2
+def fry(egg: Egg): Future[FriedEgg] = ???
 
-val friedEggF: Future[FriedEgg] = <mark>eggF.<span class="fragment" data-fragment-index="1">flatMap(frySlowly)</span></mark></span>
+// 3 Future of Future is not very useful ;)
+val friedEggFF: Future[Future[FriedEgg]] = eggF.map(fry)
+
+// 4
+val friedEggF: Future[FriedEgg] = eggF.<span class="fragment" data-fragment-index="1">flatMap(frySlowly)</span></span>
 </code></pre>
 					</section>					
 					<section>
@@ -198,9 +198,9 @@ val friedEggF: Future[FriedEgg] = <mark>eggF.<span class="fragment" data-fragmen
 						<pre><code class="scala" data-trim data-noescape>
 val softFriedEggF: Future[FriedEgg] = 
   chicken
-    .layEgg()           // returns Future[Egg]
-    .flatMap(frySlowly) // returns Future[FriedEgg] 
-    .filter(_.isSoft)  
+    .layEgg()           // 1 returns Future[Egg]
+    .flatMap(frySlowly) // 2 returns Future[FriedEgg] 
+    .filter(_.isSoft)   // 3
 </code></pre>
 						<p class="fragment">If Scala's Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException.</p>	
 					</section>								
@@ -222,7 +222,7 @@ val breakfastF: Future[(FriedEgg, Tea))] = eggF.zip(teaF)
 					</section>																
 					<section>
 						<h3>There is more!</h3>
-						<p>Scala Future API has more cool functions. There are also ways to deal with errors. See <a href="http://www.scala-lang.org/api/current/#scala.concurrent.Future">Scala API.</a></p>
+						<p>Scala Future API has more cool functions. There are also ways to deal with errors. See <a href="http://www.scala-lang.org/api/current/scala/concurrent/Future.html">Scala API.</a></p>
 					</section>				
 					<section>						
 						<h3>Use Immutable objects in Futures</h3>
@@ -251,11 +251,11 @@ val json: Json = toJson(productDetails)
 </code></pre>					
 Asynchronous
 <pre><code class="scala" data-trim data-noescape>
-<span class="fragment">val productF: Future[Product] = productClient.getProduct(productId)</span>
-<span class="fragment">val priceF: Future[Price] = priceClient.getPrice(productId, curr)</span>
+<span class="fragment" data-fragment-index="0">val productF: Future[Product] = productClient.getProduct(productId)</span>
+<span class="fragment" data-fragment-index="0">val priceF: Future[Price] = priceClient.getPrice(productId, curr)</span>
 
-<span class="fragment">val jsonF: Future[Json] = </span>
-  <span class="fragment">productF</span>
+<span class="fragment" data-fragment-index="1">val jsonF: Future[Json] = </span>
+  <span class="fragment" data-fragment-index="1">productF</span>
     <span class="fragment">.zip(priceF) // Future[(Product, Price)]</span>
     <span class="fragment">.map({case (product, price) => ProductDetails(product, price)})</span>
     <span class="fragment">.map(productDetails => toJson(productDetails))</span>
@@ -276,22 +276,35 @@ val jsonF: Future[Json] =
 </code></pre>					
 					<ul>
 						<div class="green">
-							+ Main flow of the code is never blocked<br>
-							+ Product and Price can be fetched in parallel<br>
+						    + Product and Price can be fetched in parallel<br>
+							+ Using resources properly (not blocking threads)<br>
 							+ Latency is explicit<br>
-							+ See next two slides...<br>
 						</div>
 						<span class="red">- A bit more complex than synchronous code</span>
 					</ul>
 					</section>
 					<section>
+						<h3>Consuming HTTP Services</h3>						
+						Asynchronous <span class="green">with some Scala sugar</span> <img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>
+						<pre><code class="scala" data-trim data-noescape>
+val productF: Future[Product] = productClient.getProduct(productId)
+val priceF: Future[Price] = priceClient.getPrice(productId, curr)
+
+val jsonF: Future[Json] = 
+  productF
+    .zipWith(priceF)(ProductDetails)
+    .map(toJson)
+</code></pre>					
+					</section>					
+					<section>
 						<h3>What adds latency in microservices?</h3>
-						<p>Mostly IO intensive tasks (e.g. http calls, database calls).<br> <span class="fragment">Use non blocking io to avoid blocking threads.</span></p>
-						<p>Less often CPU intensive tasks (e.g. performing encryption).<br> <span class="fragment">Use separate threadpools for such tasks.</span></p>
+						<p class="fragment" data-fragment-index="0">Mostly IO intensive tasks (e.g. http calls, database calls).<br> <span class="fragment green" data-fragment-index="1">Use non blocking io to avoid blocking threads</span></p>
+						<p class="fragment" data-fragment-index="0">Less often CPU intensive tasks (e.g. performing encryption).<br> <span class="fragment green" data-fragment-index="2">Use separate threadpools for such tasks</span></p>
 					</section>
 					<section>
 						<h3>Asynchronous microservices</h3>
-						<p>Asynchronous processing and non blocking io (http client, database client etc.) allow you to write microservices that handle huge number of concurrent requests with only a few (or even one) threads.</p>						
+						<p>Asynchronous processing and non blocking io allow you to write microservices that handle huge number of concurrent requests with only a few (or even one) threads.</p>						
+						<p class="orange"><strong>But remember! you must NEVER block the program flow!</strong></p>
 						<p class="fragment">There are many libraries for writing such services. They are often based on <a href="http://netty.io">Netty</a>. For example <a href="https://twitter.github.io/finatra/">Twitter's Finatra</a>.</p>
 					</section>
 				</section>
@@ -328,9 +341,9 @@ def sum(a: Int, b: Int): Future[Int] = Future(a + b)
 				<section>
 					<h2>Summary</h2>
 					<ul>
-						<p class="fragment">Functional programming makes concurrency easier</p>
-						<p class="fragment">Asynchronous processing reduces latency overhead</p>					
-						<p class="fragment">Asynchronous servers offer great performance (and use less resources)</p>
+						<p>Functional programming makes concurrency easier</p>
+						<p>Asynchronous processing reduces latency overhead</p>					
+						<p>Asynchronous servers offer great performance (and use less resources)</p>
 					</ul>
 				</section>
 				<section>
