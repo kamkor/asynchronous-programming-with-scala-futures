@@ -29,7 +29,7 @@
 				<section data-background="assets/hack_your_career.jpg" data-state="dim-animation" data-background-transition="none">
     				<h1><i>Back to the Future</i></h1>
     				by 
-    				Kamil Korzekwa, October 2016<br>
+    				Kamil Korzekwa, December 2016<br>
     				<small><a href="https://kamkor.me/">kamkor.me</a> &bull; <a href="https://github.com/kamkor">github.com/kamkor</a> &bull; <a href="https://twitter.com/kamkorz">@kamkorz</a></small>
 				</section>
 				<section>
@@ -121,7 +121,7 @@ trait ProductClient {
 val productF: Future[Product] = productClient.getProduct(productId)
 						</code></pre>
 						<p><strong>Future</strong> is like a box that at some point of future might contain a value or error inside.</p>
-					</section>				
+					</section>
 				</section>
 				<section>
 					<section>
@@ -165,10 +165,10 @@ friedEggF onComplete {
 					<img class="plain" style="padding: 0 0; margin: 0 0; width: auto; height: auto; max-height: 50px;" src="assets/friedegg.png"/></h3>
 						<pre><code class="scala" data-trim data-noescape>
 // 1
-val eggF: Future[Egg] = chicken.layEgg()
+def fry(egg: Egg): FriedEgg = ???
 
 // 2
-def fry(egg: Egg): FriedEgg = ???
+val eggF: Future[Egg] = chicken.layEgg()
 
 // 3
 val friedEggF: Future[FriedEgg] = eggF.<span class="fragment" data-fragment-index="1">map(fry)</span>
@@ -180,12 +180,12 @@ val friedEggF: Future[FriedEgg] = eggF.<span class="fragment" data-fragment-inde
 					Future[<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 45px;" src="assets/friedegg.png"/>]</h3>
 						<pre><code class="scala" data-trim data-noescape>
 // 1
-val eggF: Future[Egg] = chicken.layEgg()
-
-// 2
 def fry(egg: Egg): Future[FriedEgg] = ???
 
-// 3 Future of Future is not very useful ;)
+// 2
+val eggF: Future[Egg] = chicken.layEgg()
+
+// 3 Future of Future is usually not very useful
 val friedEggFF: Future[Future[FriedEgg]] = eggF.map(fry)
 
 // 4
@@ -198,12 +198,12 @@ val friedEggF: Future[FriedEgg] = eggF.<span class="fragment" data-fragment-inde
 						<pre><code class="scala" data-trim data-noescape>
 val softFriedEggF: Future[FriedEgg] = 
   chicken
-    .layEgg()           // 1 returns Future[Egg]
-    .flatMap(frySlowly) // 2 returns Future[FriedEgg] 
-    .filter(_.isSoft)   // 3
+    .layEgg() // 1 returns Future[Egg]
+    .flatMap(fry) // 2 returns Future[FriedEgg] 
+    .filter(friedEgg => friedEgg.isSoft) // 3
 </code></pre>
 						<p class="fragment">If Scala's Future doesn't contain a value that satisfies the predicate, it is completed with the exception NoSuchElementException.</p>	
-					</section>								
+					</section>
 					<section>					
 					<h2>Future[<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 45px;" src="assets/friedegg.png"/>], Future[<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 45px;" src="assets/tea.png"/>]
 					<br>=><br>
@@ -223,21 +223,6 @@ val breakfastF: Future[(FriedEgg, Tea))] = eggF.zip(teaF)
 					<section>
 						<h3>There is more!</h3>
 						<p>Scala Future API has more cool functions. There are also ways to deal with errors. See <a href="http://www.scala-lang.org/api/current/scala/concurrent/Future.html">Scala API.</a></p>
-					</section>				
-					<section>						
-						<h3>Use Immutable objects in Futures</h3>
-						<p><span class="red"><strong>Avoid</strong> synchronization in Futures</span></p>
-					</section>
-					<section>
-					    <h3>Visibility & Synchronization in JVM</h3>
-						<div><div style="width: 60%; float:left">In insufficiently synchronized JVM program, thread A may see different data than thread B. One of the solutions for this problem are immutable objects. To learn more, read the book <strong>Concurrency In Practice</strong>:</div>
-						<img class="plain" style="width: auto; height: auto; max-height: 450px;" src="assets/concurrency_in_practice.jpg"/>
-						</div>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>Asynchronous processing in microservices</h2>
 					</section>
 					<section data-transition="slide">
 						<h3>Consuming HTTP Services</h3>						
@@ -249,21 +234,21 @@ val price: Price = priceClient.getPrice(productId, curr)
 val productDetails = ProductDetails(product, price)
 val json: Json = toJson(productDetails)
 </code></pre>					
-Asynchronous
+Asynchronous with Future
 <pre><code class="scala" data-trim data-noescape>
 <span class="fragment" data-fragment-index="0">val productF: Future[Product] = productClient.getProduct(productId)</span>
 <span class="fragment" data-fragment-index="0">val priceF: Future[Price] = priceClient.getPrice(productId, curr)</span>
 
-<span class="fragment" data-fragment-index="1">val jsonF: Future[Json] = </span>
+<span class="fragment" data-fragment-index="0">val jsonF: Future[Json] = </span>
   <span class="fragment" data-fragment-index="1">productF</span>
-    <span class="fragment">.zip(priceF) // Future[(Product, Price)]</span>
+    <span class="fragment" data-fragment-index="1">.zip(priceF) // Future[(Product, Price)]</span>
     <span class="fragment">.map({case (product, price) => ProductDetails(product, price)})</span>
     <span class="fragment">.map(productDetails => toJson(productDetails))</span>
 </code></pre>					
 					</section>
 					<section>
 						<h3>Consuming HTTP Services</h3>						
-						Asynchronous
+						Asynchronous with Future
 						<pre><code class="scala" data-trim data-noescape>
 val productF: Future[Product] = productClient.getProduct(productId)
 val priceF: Future[Price] = priceClient.getPrice(productId, curr)
@@ -283,23 +268,15 @@ val jsonF: Future[Json] =
 						<span class="red">- A bit more complex than synchronous code</span>
 					</ul>
 					</section>
+				</section>
+				<section>
 					<section>
-						<h3>Consuming HTTP Services</h3>						
-						Asynchronous <span class="green">with some Scala sugar</span> <img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>
-						<pre><code class="scala" data-trim data-noescape>
-val productF: Future[Product] = productClient.getProduct(productId)
-val priceF: Future[Price] = priceClient.getPrice(productId, curr)
-
-val jsonF: Future[Json] = 
-  productF
-    .zipWith(priceF)(ProductDetails)
-    .map(toJson)
-</code></pre>					
-					</section>					
+						<h2>Asynchronous processing in microservices</h2>
+					</section>
 					<section>
 						<h3>What adds latency in microservices?</h3>
-						<p class="fragment" data-fragment-index="0">Mostly IO intensive tasks (e.g. http calls, database calls).<br> <span class="fragment green" data-fragment-index="1">Use non blocking io to avoid blocking threads</span></p>
-						<p class="fragment" data-fragment-index="0">Less often CPU intensive tasks (e.g. performing encryption).<br> <span class="fragment green" data-fragment-index="2">Use separate threadpools for such tasks</span></p>
+						<p class="fragment" data-fragment-index="0">Mostly io intensive tasks (e.g. http calls, database calls)<br> <span class="fragment green" data-fragment-index="1">Use non blocking io to avoid blocking threads</span></p>
+						<p class="fragment" data-fragment-index="0">Less often, CPU intensive tasks<br> <span class="fragment green" data-fragment-index="2">Use separate threadpools for such tasks</span></p>
 					</section>
 					<section>
 						<h3>Asynchronous microservices</h3>
@@ -326,8 +303,8 @@ def sum(a: Int, b: Int): Future[Int] = Future(a + b)
 					</ul>
 					</section>
 					<section>				
-						<h3>Concurrent state modifications</h3>
-						<p><strong>Example use case:</strong> concurrent bank account writes/reads.</p>
+						<h3>Concurrent read/write of state</h3>
+						<p><strong>Example use case:</strong> OAuth2 client that caches tokens</p>
 						<p><strong>Can be solved with:</strong> Actor Model provided by <a href="http://akka.io">Akka toolkit</a></p>
 					</section>
 					<section>				
@@ -348,6 +325,35 @@ def sum(a: Int, b: Int): Future[Int] = Future(a + b)
 				</section>
 				<section>
 					<h1>Thank you, questions?</h1>
+					<small>This is not the end, appendix is next :)</small>
+				</section>
+				<section>
+					<section>
+						<h2>Appendix</h2>
+					</section>
+					<section>						
+						<h3>Use Immutable objects in Futures</h3>
+						<p><span class="red"><strong>Avoid</strong> synchronization in Futures</span></p>
+					</section>
+					<section>
+					    <h3>Visibility & Synchronization in JVM</h3>
+						<div><div style="width: 60%; float:left">In insufficiently synchronized JVM program, thread A may see different data than thread B. One of the solutions for this problem are immutable objects. To learn more, read the book <strong>Concurrency In Practice</strong>:</div>
+						<img class="plain" style="width: auto; height: auto; max-height: 450px;" src="assets/concurrency_in_practice.jpg"/>
+						</div>
+					</section>					
+					<section>
+						<h3>Consuming HTTP Services</h3>						
+						Asynchronous <span class="green">with some Scala sugar</span> <img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>&nbsp;<img class="plain" style="margin: 0 0; width: auto; height: auto; max-height: 40px;" src="assets/candy.png"/>
+						<pre><code class="scala" data-trim data-noescape>
+val productF: Future[Product] = productClient.getProduct(productId)
+val priceF: Future[Price] = priceClient.getPrice(productId, curr)
+
+val jsonF: Future[Json] = 
+  productF
+    .zipWith(priceF)(ProductDetails)
+    .map(toJson)
+</code></pre>					
+					</section>					
 				</section>
 			</div>
 		</div>
